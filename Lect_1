@@ -1,0 +1,69 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace WinAppComm
+{
+    public partial class Communication : Form
+    {
+        public Communication()
+        {
+            InitializeComponent();
+        }
+
+        delegate void cbAddText(string str);
+
+        private void AddText(string str)
+        {
+            if (tbServer.InvokeRequired)
+            {
+                cbAddText addText = new cbAddText(AddText);
+                Invoke(addText, new object[] { str });
+            }
+            else
+            {
+                tbServer.Text += str;
+            }
+        }
+
+
+        private void btnTest_Click(object sender, EventArgs e)
+        {
+            string src = tbClient.Text; 
+            
+            //소켓 객체 생성(tcp소켓) - IP사용, 소켓스트림 사용, tcp프로토콜 사용
+            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            sock.Connect(tbIP.Text, int.Parse(tbPort.Text));    //연결
+            sock.Send(Encoding.Default.GetBytes(src));  //서버에 데이터 전송
+        }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            Thread ThreadFunc = new Thread(ServerProcess);
+            ThreadFunc.Start();
+        }
+
+        private void ServerProcess()
+        {
+            //내 포트 listen
+            TcpListener listener = new TcpListener(int.Parse(tbPort.Text));
+            listener.Start();    //listening 시작 
+
+            byte[] bArr = new byte[200];
+            TcpClient tcp = listener.AcceptTcpClient(); //연결 승인 및 연결된 tcpclient 반환
+            NetworkStream ns = tcp.GetStream();
+            ns.Read(bArr, 0, 200);  //클라이언트 데이터 읽기
+            //tbServer.Text += bArr;  //크로스스레드 --> invoke요청과 delegate
+            string s = Encoding.Default.GetString(bArr);
+            AddText(s);
+        }
+    }
+}
