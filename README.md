@@ -1,5 +1,5 @@
 # IoT-216_Network-Programming
-### Lect 1
+
 * 통신 장비
   * 허브
   * 라우터 
