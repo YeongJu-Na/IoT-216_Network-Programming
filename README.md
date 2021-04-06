@@ -41,10 +41,24 @@
   * UDP/IP기반의 Datagram방식
 * Socket클래스
     * tcp관련 클래스는 TCP/IP만 지원, 소켓클래스는 IP외에도 다양한 네트워크 
+
+==> 소켓 연결 대기 중에는 Form다른 동작x --> 스레드 필요
 * 스레드(thread): 하나의 프로그램에서 한번에, 동시에 많은 일 처리 가능
+  * 상태: suspend, abort
+ 
 * 교차 스레드(cross Thread): 다른 스레드에서 컴포넌트를 호출해 사용
     > 별도의 스레드를 현재 폼에서 호출 시 오류 → 해당 스레드를 만든 곳이 아니면 동작x
   * 해결: delegate: 대리자로서 메서드를 다른 메서드의 인수로 전달
     * 즉, 다른 스레드를 현재의 폼으로 호출해 사용
     * delegate선언, 그곳에 맞는 콜백함수를 선언하여 처리
     * invoke: delegate 호출
+
+* Timer 도구
+    * Tick 이벤트: 타이머의 일정 시간 경과 시 마다
+
+### 시행착오
+* Lect 2
+  * FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
+  * 스레드내에서 폼의 컨트롤 속성(tbServer.Text) 직접 변경 시, 에러 
+    * invoke, delgate(내일 배울 것) 
+    * 위 대신에 글로벌변수에 저장 후 타이머tick마다 tbServer.Text에 
