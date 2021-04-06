@@ -1,0 +1,105 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ComTest
+{
+    public partial class FormServer : Form
+    {
+        public FormServer()
+        {
+            InitializeComponent();
+        }
+
+        private void btnSend_Click(object sender, EventArgs e)
+        {
+            // 1. Socket생성: 주소x
+            // 2. Socket Open - Connection 수립 - 주소 부여
+            // 3. 메세지 전송: Message -문자열 외에 이미지나 동영상도 가능. 단 양축이 서로 약속된 약에 의해서
+            //==> 프로토콜 제정
+
+            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            sock.Connect(tbIP.Text, int.Parse(tbPort.Text));
+            string str = tbClient.Text;
+            byte[] bArr = Encoding.Default.GetBytes(str);   //윈도우즈의 현재 코드체계로
+
+            sock.Send(bArr);
+
+        }
+        string MainMsg;     // tbServer.Text
+        TcpListener listener = null;
+        Thread thread = null;
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            //0. bind
+            //1. 무한 수신 대기: listen
+            //2. 기존 이벤트 처리:
+            //3. 외부 접속 요청 수신시 해당 요청 처리
+            if (thread == null)
+            {
+                thread = new Thread(ServerProcess);  //스레드 선언, ServerProcess()는 안됨, 메소드 이름만
+                thread.Start();
+            }
+            else
+            {
+                thread.Resume();
+            }
+            sbServerMsg.Text = "Thread on Running";
+            timer1.Enabled = true;
+        }
+
+        
+        private void ServerProcess()
+        {
+            while(true)   //while문 없을 시, 1개의 패킷마다 연결(start 클릭)해줘야
+            {
+                if(listener==null) listener = new TcpListener(int.Parse(tbServerPort.Text));
+                //TcpListener listener = new TcpListener(int.Parse(tbServerPort.Text));   //bind
+                //스레드 안, 특히 무한 루프 내에서는 new 만드는거 주의해야함
+                listener.Start();   //listen
+                if (!listener.Pending())
+                {
+                    //sbServerMsg.Text = "Listening....";     //루프끝나지 않아서 해당 변경내용 적용x
+                    //this.Invalidate();
+                    TcpClient tcp = listener.AcceptTcpClient(); //accept
+                                                                //sbServerMsg.Text = "Connected";
+                                                                //sbServerLable2.Text = "Connected";
+
+                    NetworkStream ns = tcp.GetStream(); //recv
+                    byte[] bArr = new byte[200];
+                    ns.Read(bArr, 0, 200);
+                    //tbServer.Text += Encoding.Default.GetString(bArr);
+                    MainMsg = Encoding.Default.GetString(bArr);
+                }
+                listener.Stop();
+            }
+        }
+
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            if (thread.ThreadState == ThreadState.Suspended) return;
+            thread.Suspend();   //thread.Resume();
+            if (thread.IsAlive) sbServerMsg.Text = "Thread Alived";
+            else sbServerMsg.Text = "Thread not Alived";
+
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            tbServer.Text = MainMsg;
+        }
+
+        private void FormServer_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if(thread!=null)    thread.Abort();
+        }
+    }
+}
