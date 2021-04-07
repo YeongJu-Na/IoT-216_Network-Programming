@@ -1,0 +1,86 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ComClient
+{
+    public partial class TcpClient : Form
+    {
+        [DllImport("kernel32")]   //참조 설정과 같다
+        static extern int GetPrivateProfileString(string sec, string key, string defstr, StringBuilder sb, int n, string path);
+        //ini파일에 section, key, 나머지에 대한 변수, stringbuilder sb. sb의 크기, 실제 위치
+
+        [DllImport("kernel32")] //한번에 하나씩밖에 못불러옴
+        static extern int WritePrivateProfileString(string sec, string key, string str, string path);
+
+        public TcpClient()
+        {
+            InitializeComponent();
+        }
+
+        string initIP = "127.0.0.1";
+        int initPort = 9000;
+
+        private void btnSend_Click(object sender, EventArgs e)
+        {
+            Socket sock  = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            
+            sock.Connect(tbIP.Text,int.Parse(tbPort.Text));
+            //sock.Send(Encoding.Default.GetBytes(tbClient.Text));
+
+            int ret = sock.Send(Encoding.Default.GetBytes(tbClient.Text));
+            if (ret > 0) sbMessage.Text = $"{ret} byte(s) send success";
+
+            //sock.Close();
+
+        }
+
+        private void TcpClient_Load(object sender, EventArgs e)
+        {
+
+            StringBuilder sb = new StringBuilder(512);  //comm섹션의 IP키의 값을 넣음, 없으면 세번째(defstr) 값 들어감
+            //Section [Comm], key[IP    Port], ...FileName:ComClient.ini(현재 위치의? 파일이름)
+            GetPrivateProfileString("Comm","IP","127.0.0.1",sb, 512, ".\\ComClient.ini"); initIP = sb.ToString();
+            GetPrivateProfileString("Comm", "Port", "9000", sb, 512, ".\\ComClient.ini"); initPort = int.Parse(sb.ToString());
+
+            GetPrivateProfileString("Form", "LocX", "0", sb, 512, ".\\ComClient.ini"); int locx = int.Parse(sb.ToString());//initIP = sb.ToString();
+            GetPrivateProfileString("Form", "LocY", "0", sb, 512, ".\\ComClient.ini"); int locy = int.Parse(sb.ToString());
+            Location = new Point(locx, locy);
+
+            GetPrivateProfileString("Form", "SizeX", "529", sb, 512, ".\\ComClient.ini"); int width = int.Parse(sb.ToString());
+            GetPrivateProfileString("Form", "SizeY", "363", sb, 512, ".\\ComClient.ini"); int height = int.Parse(sb.ToString());
+            Size = new Size(width, height);
+
+            GetPrivateProfileString("Form", "SplitBar", "281", sb, 512, ".\\ComClient.ini"); splitContainer1.SplitterDistance= int.Parse(sb.ToString());
+
+            tbIP.Text = initIP;
+            tbPort.Text = $"{initPort}";
+        }
+
+        private void TcpClient_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            WritePrivateProfileString("Comm", "IP", initIP, ".\\ComClient.ini");
+            WritePrivateProfileString("Comm", "Port", $"{initPort}", ".\\ComClient.ini");
+            
+            //폼의 위치(Location) 저장하기 --> Point 객체로 존재--> x, y로 구성됨
+            WritePrivateProfileString("Form", "LocX", $"{Location.X}", ".\\ComClient.ini");
+            WritePrivateProfileString("Form", "LocY", $"{Location.Y}", ".\\ComClient.ini");
+            
+            //폼 사이즈
+            WritePrivateProfileString("Form", "SizeX", $"{Size.Width}", ".\\ComClient.ini");
+            WritePrivateProfileString("Form", "SizeY", $"{Size.Height}", ".\\ComClient.ini");
+
+            WritePrivateProfileString("Form", "SplitBar", $"{splitContainer1.SplitterDistance}", ".\\ComClient.ini");
+            
+        }
+    }
+}
