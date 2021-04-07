@@ -31,7 +31,8 @@
   * Tcpclient클래스 - 클라이언트
     * TcpClient.Client(내부소켓).RemoteEndPoint(원격 끝점)
   * TcpListener클래스 -서버
-    * AcceptTcpClient: 포트를 열고 메서드를 통해 클라이언트 접속을 대기하고 있다가 접속 요청이 오면 이를 받아들여 tcpClient객체를 생성하여 리턴 --> blocking 주의
+    * AcceptTcpClient: 포트를 열고 메서드를 통해 클라이언트 접속을 대기하고 있다가 접속 요청이 오면 이를 받아들여 tcpClient객체를 생성하여 리턴
+    * > blocking 주의: 연결전까지 대기만 가능, 스레드 상태 변화 불가(진행중인 스레드 마치고 상태변화 적용 되므로)
     * AcceptSocket: AcceptTcpClient()대신 사용 시 tcpclient 객체 대신 low level의 Socket객체 사용 가능
     * Pending: 보류 중인 연결 존재 시
  
@@ -49,16 +50,14 @@
 ==> 소켓 연결 대기 중에는 Form다른 동작x --> 스레드 필요
 * 스레드(thread): 하나의 프로그램에서 한번에, 동시에 많은 일 처리 가능
   * 상태: suspend, abort 등
-   * 교차 스레드(cross Thread): 다른 스레드에서 컴포넌트를 호출해 사용
-    > 별도의 스레드를 현재 폼에서 호출 시 오류 → 해당 스레드를 만든 곳이 아니면 동작x
+   * 교차 스레드(cross Thread): 컴포넌트 생성한 스레드와 호출한 스레드가 다를 때 발생
+    > 해당 스레드를 만든 곳이 아니면 동작x
   * 해결: delegate: 대리자로서 메서드를 다른 메서드의 인수로 전달
-    * 즉, 다른 스레드를 현재의 폼으로 호출해 사용
-    * delegate선언, 그곳에 맞는 콜백함수를 선언하여 처리
-    * invoke: delegate 호출
+
 * Delegate(대리자): 대신 수행, 메서드에 대한 참조를 가리키는 형식으로 메서드 간접 호출 가능
     * 함수의 포인터라고 생각하면 편함
-  * > Cross Thread: 스레드(ServerProcess()) 내에서 tbServer.Text 바꿀 때, 컨트롤을 호출하는 스레드(현재 스레드) 와 컨트롤이 만들어진 스레드가 달라 오류 발생
-    * addText함수: 컨트롤에서 InvokeRequired발생 시, invoke로 실행
+    * delegate선언, 그곳에 맞는 콜백함수를 선언하여 처리
+    * 프로젝트 내용 중 addText함수: 컨트롤.InvokeRequired발생 시, invoke로 실행
 * Timer 도구
     * Tick 이벤트: 타이머의 일정 시간 경과 시 마다 --> 부정확, 안 쓸수 있다면 안쓰는게 좋다
 
