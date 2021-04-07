@@ -68,7 +68,7 @@
     * invoke, delgate(내일 배울 것) 
     * 위 대신에 글로벌변수에 저장 후 타이머tick마다 tbServer.Text에 
 * Lect 3
->> ComServer프로젝트의 FormServer.cs
+- ComServer프로젝트의 FormServer.cs
   * listener.AcceptTcpClient()
     * blocking - 연결 받기까지 다른 작업(창 이동 등) 불가, 스레드 abort, suspend 등을 해도 진행중인 스레드 모두 끝내고 적용되므로 문제
     * → if(listener.Pending())내에 작성	 // 보류 중인 연결 있을 때에만 accept하도록 해야 함
@@ -84,7 +84,7 @@
     * EndPoint: 통신하는 양 끝점
     * IPEndPoint
     
->> ComClient프로젝트의 FormClient.cs
+- ComClient프로젝트의 FormClient.cs
 * 설정 파일 - 사용자 환경 저장(설치작업, customizing) - ini파일 , 레지스트리
   * ini파일: initialize 의미
     * 폼 load될 때, ini에서 초기 값 가져와 설정 / 폼closing 시, 최종값으로 ini 갱신
