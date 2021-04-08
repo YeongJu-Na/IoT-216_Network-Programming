@@ -1,5 +1,6 @@
-# IoT-216_Network-Programming
-
+# IoT-216 강의: Network-Programming
+--------
+### [수업 내용]
 * 통신 장비
   * 허브
   * 라우터 
@@ -60,8 +61,8 @@
     * 프로젝트 내용 중 addText함수: 컨트롤.InvokeRequired발생 시, invoke로 실행
 * Timer 도구
     * Tick 이벤트: 타이머의 일정 시간 경과 시 마다 --> 부정확, 안 쓸수 있다면 안쓰는게 좋다
-
-### 시행착오
+---------
+### [시행착오]
 * Lect 2
   * FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
   * 스레드내에서 폼의 컨트롤 속성(tbServer.Text) 직접 변경 시, 에러 
@@ -90,4 +91,4 @@
     * 폼 load될 때, ini에서 초기 값 가져와 설정 / 폼closing 시, 최종값으로 ini 갱신
     * kernel32.dll파일 import 후 사용할 메서드 선언(GetPrivateProfileString / write~)
     * > +) 폼위치 : Location = new Point(x,y)--> x,y각각 넣을수없음, 폼 사이즈도
-
+* Lect 4
