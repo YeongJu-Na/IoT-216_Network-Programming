@@ -1,6 +1,38 @@
 # IoT-216 강의: Network-Programming / C# winForm
---------
-### [수업 내용]
+------------
+### [과제 및 시행착오]
+* Lect 2) 소켓 생성 및 활용, 스레드 생성 및 활용
+  * FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
+  * 스레드내에서 폼의 컨트롤 속성(tbServer.Text) 직접 변경 시, 에러 
+    * invoke, delgate(내일 배울 것) 
+    * 위 대신에 글로벌변수에 저장 후 타이머tick마다 tbServer.Text에 
+* Lect 3) 프로젝트 2개(서버, 클라이언트)생성해서 1패킷 주고 받기
+- ComServer프로젝트의 FormServer.cs
+  * listener.AcceptTcpClient()
+    * blocking - 연결 받기까지 다른 작업(창 이동 등) 불가, 스레드 abort, suspend 등을 해도 진행중인 스레드 모두 끝내고 적용되므로 문제
+    * → if(listener.Pending())내에 작성	 // 보류 중인 연결 있을 때에만 accept하도록 해야 함
+  * listener: 로컬포트에 일정한 포트 넘버를 계속 감시하는 기능 수행
+    * start후 계속 살아있는 상태로 stop하지 않는게 좋다 (스레드와 운명 같이하도록)- 경험적
+  * 스레드 무한 루프 끝에 Thread.Sleep(100);  //약간의(10~100정도)딜레이를 주는게 좋다
+    * cpu점유 등과 관련 → 부하가 커서? 다른 처리속도 느려짐
+  * Timer: 타이머 정확x →  사용시 검증 중요, 안쓸수 있다면 안쓰는게 좋다
+
+  * 연결 accept - TcpClient 대신 socket 사용해보기
+    * listener.AcceptSocket()
+    * socket.Available, Receive(), RemoteEndPoint()
+    * EndPoint: 통신하는 양 끝점
+    * IPEndPoint
+    
+- ComClient프로젝트의 FormClient.cs
+* 설정 파일 - 사용자 환경 저장(설치작업, customizing) - ini파일 , 레지스트리
+  * ini파일: initialize 의미
+    * 폼 load될 때, ini에서 초기 값 가져와 설정 / 폼closing 시, 최종값으로 ini 갱신
+    * kernel32.dll파일 import 후 사용할 메서드 선언(GetPrivateProfileString / write~)
+    * > +) 폼위치 : Location = new Point(x,y)--> x,y각각 넣을수없음, 폼 사이즈도
+* Lect 4) 서버와 클라이언트 간 여러 데이터 주고 받기
+
+-------------------
+### [수업 이론 내용]
 * 통신 장비
   * 허브
   * 라우터 
@@ -62,33 +94,3 @@
 * Timer 도구
     * Tick 이벤트: 타이머의 일정 시간 경과 시 마다 --> 부정확, 안 쓸수 있다면 안쓰는게 좋다
 ---------
-### [시행착오]
-* Lect 2
-  * FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
-  * 스레드내에서 폼의 컨트롤 속성(tbServer.Text) 직접 변경 시, 에러 
-    * invoke, delgate(내일 배울 것) 
-    * 위 대신에 글로벌변수에 저장 후 타이머tick마다 tbServer.Text에 
-* Lect 3
-- ComServer프로젝트의 FormServer.cs
-  * listener.AcceptTcpClient()
-    * blocking - 연결 받기까지 다른 작업(창 이동 등) 불가, 스레드 abort, suspend 등을 해도 진행중인 스레드 모두 끝내고 적용되므로 문제
-    * → if(listener.Pending())내에 작성	 // 보류 중인 연결 있을 때에만 accept하도록 해야 함
-  * listener: 로컬포트에 일정한 포트 넘버를 계속 감시하는 기능 수행
-    * start후 계속 살아있는 상태로 stop하지 않는게 좋다 (스레드와 운명 같이하도록)- 경험적
-  * 스레드 무한 루프 끝에 Thread.Sleep(100);  //약간의(10~100정도)딜레이를 주는게 좋다
-    * cpu점유 등과 관련 → 부하가 커서? 다른 처리속도 느려짐
-  * Timer: 타이머 정확x →  사용시 검증 중요, 안쓸수 있다면 안쓰는게 좋다
-
-  * 연결 accept - TcpClient 대신 socket 사용해보기
-    * listener.AcceptSocket()
-    * socket.Available, Receive(), RemoteEndPoint()
-    * EndPoint: 통신하는 양 끝점
-    * IPEndPoint
-    
-- ComClient프로젝트의 FormClient.cs
-* 설정 파일 - 사용자 환경 저장(설치작업, customizing) - ini파일 , 레지스트리
-  * ini파일: initialize 의미
-    * 폼 load될 때, ini에서 초기 값 가져와 설정 / 폼closing 시, 최종값으로 ini 갱신
-    * kernel32.dll파일 import 후 사용할 메서드 선언(GetPrivateProfileString / write~)
-    * > +) 폼위치 : Location = new Point(x,y)--> x,y각각 넣을수없음, 폼 사이즈도
-* Lect 4
