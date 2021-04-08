@@ -1,0 +1,63 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
+
+namespace MyLibrary
+{
+    public partial class LibSource: UserControl
+    {
+        public LibSource()
+        {
+            InitializeComponent();
+        }
+    }
+
+    public class iniFile
+    {
+        [DllImport("kernel32")]   //참조 설정과 같다
+        static extern int GetPrivateProfileString(string sec, string key, string defstr, StringBuilder sb, int n, string path);
+        //ini파일에 section, key, 나머지에 대한 변수, stringbuilder sb. sb의 크기, 실제 위치
+
+        [DllImport("kernel32")] //한번에 하나씩밖에 못불러옴
+        static extern int WritePrivateProfileString(string sec, string key, string str, string path);
+
+        public iniFile(string path)    //생성자
+        {
+            iniPath = path;
+        }
+
+        private string iniPath = "";
+        public string GetString(string sec, string key, string def = "")
+        {
+            StringBuilder sb = new StringBuilder(512);
+            GetPrivateProfileString(sec, key, def, sb, 512, iniPath);
+            
+            return sb.ToString();
+        }
+
+        public int SetString(string sec, string key, string val)
+        {
+             return WritePrivateProfileString(sec, key, val, iniPath);
+        }
+
+        public void ChangeFileName(string p)
+        {
+            iniPath = p;
+        }
+    }
+    public static class mylib
+    {
+        public static string GetToken(int n, string str, char deli)    //str을 deli로 구분해 n번째 자료 반환
+        {
+            return str.Split(deli)[n];
+
+        }
+    }
+}
