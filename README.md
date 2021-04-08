@@ -3,10 +3,10 @@
 ### [과제 및 시행착오]
 1. Lect 1 - 이론
 2. Lect 2 - 소켓 생성 및 활용, 스레드 생성 및 활용
-** FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
-** 스레드내에서 폼의 컨트롤 속성(tbServer.Text) 직접 변경 시, 에러 
-*** invoke, delgate(내일 배울 것) 
-*** 위 대신에 글로벌변수에 저장 후 타이머tick마다 tbServer.Text에 
+  - ####FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
+  - ####스레드내에서 폼의 컨트롤 속성(tbServer.Text) 직접 변경 시, 에러 
+    - #####invoke, delgate(내일 배울 것) 
+    * 위 대신에 글로벌변수에 저장 후 타이머tick마다 tbServer.Text에 
 3. Lect 3 - 프로젝트 2개(서버, 클라이언트)생성해서 1패킷 주고 받기 / 설치파일(ini)
 - ComServer프로젝트의 FormServer.cs
   * listener.AcceptTcpClient()
