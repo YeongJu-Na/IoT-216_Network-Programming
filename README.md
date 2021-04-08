@@ -1,13 +1,13 @@
 # IoT-216 강의: Network-Programming / C# winForm
 ------------
 ### [과제 및 시행착오]
-- 1. Lect 1 - 이론
-- 2. Lect 2 - 소켓 생성 및 활용, 스레드 생성 및 활용
+- Lect 1 - 이론
+- Lect 2 - 소켓 생성 및 활용, 스레드 생성 및 활용
   - FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
   - 스레드내에서 폼의 컨트롤 속성(tbServer.Text) 직접 변경 시, 에러 
     - invoke, delgate(내일 배울 것) 
     - 위 대신에 글로벌변수에 저장 후 타이머tick마다 tbServer.Text에 
-- 3. Lect 3 - 프로젝트 2개(서버, 클라이언트)생성해서 1패킷 주고 받기 / 설치파일(ini)
+- Lect 3 - 프로젝트 2개(서버, 클라이언트)생성해서 1패킷 주고 받기 / 설치파일(ini)
   - listener.AcceptTcpClient()
     * blocking - 연결 받기까지 다른 작업(창 이동 등) 불가, 스레드 abort, suspend 등을 해도 진행중인 스레드 모두 끝내고 적용되므로 문제
     * → if(listener.Pending())내에 작성	 // 보류 중인 연결 있을 때에만 accept하도록 해야 함
@@ -25,7 +25,7 @@
     * 폼 load될 때, ini에서 초기 값 가져와 설정 / 폼closing 시, 최종값으로 ini 갱신
     * kernel32.dll파일 import 후 사용할 메서드 선언(GetPrivateProfileString / write~)
     * > +) 폼위치 : Location = new Point(x,y)--> x,y각각 넣을수없음, 폼 사이즈도
-- 4. Lect 4
+- Lect 4
   - 컨트롤 클래스 라이브러리에 설정파일(ini)조작하는 함수 담기
     - 새 프로젝트(컨트롤 클래스 라이브러리)로 작성 후 빌드 → 사용할 프로젝트의 참조로 추가(.dll)
     - 라이브러리에서 작성한 다른 클래스 mylib를 프로젝트에서 쓸 때, using, new필요 → 번거로움 
@@ -34,7 +34,7 @@
     - ServerProcess()함수 마지막에 클라이언트에서처럼 Receive
 
 -------------------
-### [수업 이론 내용]
+### [수업 이론 내용] 
 * 통신 장비
   * 허브
   * 라우터 
