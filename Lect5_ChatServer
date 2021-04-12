@@ -1,0 +1,130 @@
+using MyLibrary;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ChatServer
+{
+    public partial class FrmChatServer : Form
+    {
+        public FrmChatServer()
+        {
+            InitializeComponent();
+        }
+
+        Thread threadServer = null;
+        Thread th = null;
+        TcpListener listener = null;
+        TcpClient tcp = null;
+
+        delegate void cbAddText(string str);
+
+        void AddText(string str)
+        {
+            if (tbReceive.InvokeRequired)
+            {
+                cbAddText cb = new cbAddText(AddText);
+                Invoke(cb, new object[] { str });
+            }
+            else tbReceive.AppendText(str);
+        }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            if (listener == null)
+            {
+                listener = new TcpListener(int.Parse(tbPort.Text));
+                listener.Start();
+            }
+            if (threadServer == null)
+            {
+                threadServer = new Thread(ServerProcess);
+                threadServer.Start();
+            }
+
+        }
+
+//Lect 2와의 차이: 1패킷받기 --> 여러 패킷 받기
+//두 개의 무한 루프는 x --> 별도의 스레드로 구성할 것 --> ReadProcess
+        void ServerProcess()
+        {
+            while (true)
+            {
+                if (listener.Pending())
+                {
+                    tcp = listener.AcceptTcpClient();     //블로킹 모드
+                    /*
+                    NetworkStream ns = tcp.GetStream();
+                    byte[] bArr = new byte[200];
+                    while (true)      //dedicated - 해당 tcp전용 루프(test)용-> 별도의 스레드로(ReadProcess)
+                    {
+                        while (ns.DataAvailable)
+                        {
+                            int n = ns.Read(bArr, 0, 200);
+                            AddText(Encoding.Default.GetString(bArr));
+                        }
+                    }
+                    */
+                    Thread th = new Thread(ReadProcess);
+                    th.Start();
+                }
+                Thread.Sleep(100);      //현재 스레드 일시 중단 
+            }
+        }
+
+        void ReadProcess()
+        {
+            if(tcp != null)
+            {
+                NetworkStream ns = tcp.GetStream();
+                byte[] bArr = new byte[200];
+                while (true)
+                {
+                    while (ns.DataAvailable)
+                    {
+                        int n = ns.Read(bArr, 0, 200);
+                        AddText(Encoding.Default.GetString(bArr, 0, n));
+                    }
+                }
+            }
+        }
+
+
+        iniFile ini = new iniFile(".\\ChatServer.ini");
+
+        private void FrmChatServer_Load(object sender, EventArgs e)
+        {
+            int x1, x2, y1, y2;
+            tbPort.Text = ini.GetString("Server", "Port", "9000");
+            x1 = int.Parse(ini.GetString("Form", "LocationX", "0"));
+            y1 = int.Parse(ini.GetString("Form", "LocationY", "0"));
+            this.Location = new Point(x1, y1);
+
+            x2 = int.Parse(ini.GetString("Form", "SizeX", "500"));
+            y2 = int.Parse(ini.GetString("Form", "SizeY", "500"));
+            this.Size = new Size(x2, y2);
+        }
+
+        private void FrmChatServer_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ini.SetString("Server", "Port", tbPort.Text);
+
+            ini.SetString("Form", "LocationX", $"{Location.X}");
+            ini.SetString("Form", "LocationY", $"{Location.Y}");
+
+            ini.SetString("Form", "SIzeX", $"{Size.Width}");
+            ini.SetString("Form", "SIzeY", $"{Size.Height}");
+
+            if(threadServer!=null) threadServer.Abort();
+            if (th != null) th.Abort();
+        }
+    }
+}
