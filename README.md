@@ -1,6 +1,134 @@
 # IoT-216 강의: Network-Programming / C# winForm
-------------
+-------------------
+### [수업 이론 내용] 
+--------------------
+1. 네트워크 구조
+* 프로토콜: 인터넷 상에서 컴 간 데이터 주고 받기 위한 약속된 형식 → 통신 규약
+* osi 7 계층: 컴퓨터 네트워크 프로토콜 형식과 통신을 계층으로 구분하여 규정→ 프로토콜을 기능별 구분한 것 → 프로그래머는 os에서 제공하는 서비스 사용; 전송~응용계층 까지
+* 전송계층
+  * TCP(transmission control protocol): 연결형 서비스 지원하는 전송계층 프로토콜, 신뢰성o, unicast
+    * IP와 포트 필요: IP는 호스트까지 연결하지만(계층차이), tcp는 호스트 내 포트까지 연결하며 해당 포트에서 기다리고 응용 프로그램까지 도달
+* TCP/IP계층: 4개 계층, 인터넷프로토콜, 운영 체제의 일부로 구현되어 있음 → 이 서비스를 이용하면 됨
+  * 전송 방식: TCP(전송제어프로토콜, 에러검출, 재전송 등 데이터 신뢰성 ), UDP(빠른 전송)
+* 클라이언트 - 서버
+  * 서버: 클라이언트에게 네트워크를 통해 정보나 서비스를 제공하는 컴(hw) 또는 프로그램
+    * 웹서버 - iis(ms) -웹 서비스 하는 서버 프로그램 
+  * 클라이언트: 네트워크를 통해 서버라는 다른 컴퓨터 시스템 상의 원격서비스에 접속할 수 있는 응용프로그램 또는 사용자 컴퓨터
+  * 포트번호:서버의 입장에서 클라이언트 구분
+    * 접속된 다수의 응용프로그램 구분 위한 번호, 0~65535(예약된 번호: 0~1023)
+    * > 7번: 에코, 13번 DayTime, 21/23: FTP,Telnet, 25: smtp, 80: http
+* TCP서버 기본 구조 및 클래스
+  * 대기상태(TcpListener) → 접속 요청(TcpClient) → 데이터 전송(NetworkStream)
+    * TcpListener: 연결과 TcpClient 객체 생성
+    * TcpClient: 데이터 전송
+    * 접속 요청 받으면 서버측도 tcpclient객체를 만들어 클라이언트의 tcpclient와 1대1로 붙어서 계속적으로 데이터 주고 받음
+    * NetworkStream 통로
+  * 다중접속 시, 매 연결/클라이언트 요청 마다 스레드 생성되면서 StreamRead/Write
+* UDP서버와 클래스: 기본은 TCP와 같으나, 대기상태는 접속 요청을 받는 게 아니라 바로 데이터 받음
+  * 비연결형: IP주소와 포트 번호 알면 데이터 전송 가능(접속요청, 즉 연결을 따로 하지 않음을 의미)
+  * UdpClient: 서버와 클 모두에서 사용  /  그룹 처리: UdpClient.JoinMulticast() 사용
+
+* loopback: 컴퓨터환경에서 자기 자신에 접근하는 경우
+  * 127.0.0.1
+    * OS자체적으로 제공하며, 항상 고정된 자기자신을 가리키는 IP, 예약된 ip주소
+    * os에서 가상 지원, 랜카드 등 디바이스 자체를 통과하지 않고 sw적으로 처리됨
+  * localhost
+    * 호스트네임, 자신의 ip로 직접 접근 시, localhost로 접근하는게 더 빠르고 자원 덜 씀
+* cmd명령어
+  * ipconfig: 내 컴퓨터의 네트워크 환경(IP정보) 확인 가능
+  * ping(Packet INternet Groper): 대상 컴을 향해 일정 크기의 패킷을 보내고 이에 대한 응답을 받아 대상 컴퓨터의 동작 여부나 네트워크 상태 파악 가능
+     > ping [IP 또는 도메인]
+  * nsLookup: DNS에 질의하여, 도메인의 정보를 조회, 어떤 주소의 실제 IP주소알 수 o
+  * netstat: 현재 내 컴에서 연결중이거나 연결대기중인 상태의 port 확인 가능
+  * route: 현재 넷상의 모든 연결
+
+2. 네트워크 클래스: 정보 클래스 > 연결 클래스 > 전송 클래스 
+(1) 정보 클래스: 클래스지만 구조체 정도 수준
+* IPAddress: ip주소 (string 형식-127.0.0.1 <-> 주소의 실체 - long형 값)
+  * Parse(string ipString) - long 타입 반환  / ToString() - string 형태로 반환 
+* DNS: 도메인 명 <-> ip주소 관리
+  * GetHostEntry(IPAddress addr또는 string 호스트명/주소): IPHostEntry형태로 반환
+  * GetHostAddresses	:IPAddrress[ ] 배열 형태로 반환( 여러개의 IP갖는 경우)
+  (정적static 함수 → 객체 생성 없이 사용 가능)
+* IPHostEntry: 도메인명과 ip주소 저장하는 컨테이너 → AddressList / HostName
+* IPEndPoint: 목적지 ip주소와 포트번호를 저장 → IPEndPoint(long/IPAddress addr, int port)
+
+(2) 연결 클래스: 실제 연결을 해주는 클래스, 내부적으로 소켓 기반(Winsock)
+* TcpListener(IPAddress, int port): 서버와 클 구분할 수 있는 클래스, 클라이언트의 연결 대기
+  * LocalEndPoint: 현재 연결된 끝점(end point) - 서버 측
+  * Start / Stop:대기 상태 시작, 정지
+  * AcceptTcpClient: 클라이언트 요청 대기 및 tcpclient생성(연결수락)
+    * > blocking 주의: 연결전까지 대기만 가능, 스레드 상태 변화 불가(진행중인 스레드 마치고 상태변화 적용 되므로)
+  * Client.RemoteEndPoint → cast형변환 통해서 IPEndPoint
+  * Pending: 보류중인 연결 존재 시
+* TcpClient(호스트명, port) - 서버, 클라이언트 모두에
+  * Connected: 연결 여부
+  * Close(): 연결 해제
+
+(3) 전송 클래스
+* NetworkStream: tcp연결에서 데이터 송수신 스트림 - 기본 전달 경로 제공
+  * GetStream
+  * Read / Write 	⇒ byte[]로 전송: Encoding.ASCII.GetBytes(string str)
+  * Close
+* StreamReader / Writer(Stream stream)
+  * StreamWriter: 문자열 끝에 종결자(\n, \r\n, \r) 붙여씀 ,텍스트파일
+    * WriteLine
+    * close: 자동으로 가능→ NetworkStream ns = tcpClient.GetStream(); using(StreamWriter sw = new StreamWriter(ns){~~}	// 해당 괄호 끝나면 저절로 close
+    * AutoFlush = true;	// writeline한 후 버퍼비우기 
+  * StreamReader: streamwriter에서 전달하는 문자열을 종결자 단위로 읽기 //네트워크 스트림으로 하려면 일일이 파스해야해서 불편
+    * WriteLine
+    * ReadLine(): 종결자 단위로 읽기 //string으로 리턴, 읽을 거 없으면 null
+* BinaryWriter/Reader - 이진 파일(임의의 데이터 형 해석<->일반적인 것들은 1바이트 단위형 해석)
+  * Write
+  * ReadXXX→ ex) ReadString(), ReadInt32(), ReadChar 등
+3. Socket Programming
+  * 송신: 소켓 생성 → 연결 요청 및 연결(connect) → 통신(send/ recv) → 소켓 닫기
+  * 수신: 소켓 생성→ ip주소,포트 할당(bind) → 연결 대기(listen)-->연결 승인(accept)--> 통신 → 닫기
+* socket: 네트워크 상에서 동작하는 프로그램 간 통신의 종착점(Endpoint)
+    * 응용프로그램에서 tcp/ip를 이용하는 창구역할, 통신을 위한 통로
+    * 프로그램이 네트워크에서 데이터를 통신할 수 있도록 연결해주는 연결부
+  * TCP/IP기반의 Stream방식
+  * UDP/IP기반의 Datagram방식
+* Socket클래스
+    * tcp관련 클래스는 TCP/IP만 지원, 소켓클래스는 IP외에도 다양한 네트워크
+    * Available: 읽을 수 있는 데이터의 양
+    * Receive: 바인딩 된 소켓 정보 받기, 받은 바이트 수 반환
+    * RemoteEndPoint: 원격 끝점 -->EndPoint로, cast연산 통해 IPEndPoint(O)
+
+==> 소켓 연결 대기 중에는 Form다른 동작x --> 스레드 필요
+4. Thread
+  * 운영체제의 자원, 프로그램 안에서 독립적으로 실행 가능(멀티태스킹 os)
+    * 함수를 스레드에게 실행해달라고 구현해서 줌
+> 프로그램(코드& 데이터) → 프로세스(os로부터 할당받은 메모리에 코드와 데이터를 저장, cpu 할당 받아 실행 가능한 상태) → 스레드(프로세스를 할당 받고 코드를 실행) (프로세스:메모리개념, 스레드는 실행 개념)
+* 실행: 프로그램 실행(Main→ 주스레드, 싱글 스레드) / 코드에 의해 (thread라는 객체를 이용해서 프로그래머가 실행시킴)
+* 스레드 함수의 호출 구조
+: 스레드 함수 구현 → 델리게이트 생성과 스레드 함수 설정 → 스레드 생성 → 스레드 실행
+    * call function → delegate를 통해 실행 가능 :함수의 원형이 같아야 
+> ex) th1.Start(); th2.Start(); Console.WriteLine(“메인종료”); ⇒ 메인종료 먼저뜨고 두 스레드 각각 반복문돌아감
+* 주요 속성
+  * Name
+  * IsAlive
+  * IsBackground  // foreground - 주 스레드에 독립적, background: 주스레드와 함께 종료
+  * CurrentThread: 현 스레드 반환, 각 스레드마다 부여되는 아이디(gethashcode())를 얻기 위해 많이 사용
+* 메서드
+  * Start
+  * Join: 스레드가 종료될 때 까지 대기
+  * Abort: 스레드 중지,이 함수를 호출한 곳의 현재 스레드를 중지→current로 가리켜서 중지 가능 (Thread.CurrentThread.Abort())
+  * resume, suspend → 닷넷 2.0 버전 이후부터 사용하지 않는 메서드이며 제거됨
+
+ * 교차 스레드(cross Thread): 컴포넌트 생성한 스레드와 호출한 스레드가 다를 때 발생
+    > 해당 스레드를 만든 곳이 아니면 동작x
+  * 해결: delegate: 대리자로서 메서드를 다른 메서드의 인수로 전달
+
+* Delegate(대리자): 대신 수행, 메서드에 대한 참조를 가리키는 형식으로 메서드 간접 호출 가능
+    * 함수의 포인터라고 생각하면 편함
+    * delegate선언, 그곳에 맞는 콜백함수를 선언하여 처리
+    * 프로젝트 내용 중 addText함수: 컨트롤.InvokeRequired발생 시, invoke로 실행
+* Timer 도구
+    * Tick 이벤트: 타이머의 일정 시간 경과 시 마다 --> 부정확, 안 쓸수 있다면 안쓰는게 좋다
+---------
 ### [과제 및 시행착오]
+---------
 - Lect 1 - 이론
 - Lect 2 - 소켓 생성 및 활용, 스레드 생성 및 활용
   - FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
@@ -33,66 +161,11 @@
   - 서버 측에서도 연결 끊지 않고 메세지 전송하기
     - ServerProcess()함수 마지막에 클라이언트에서처럼 Receive
 
--------------------
-### [수업 이론 내용] 
-* 통신 장비
-  * 허브
-  * 라우터 
-    * L2 :DHCP(dynamic host configuration protocol-호스트의 IP주소와 각종 TCP/IP 프로토콜의 기본 설정을 클라이언트에게 자동 제공하는 프로토콜), 고속스위칭
-    * L3 :방화벽, 보안(물리적)
-    * L4 :로드밸런싱
-* cmd명령어
-  * ipconfig: 내 컴퓨터의 네트워크 환경(IP정보) 확인 가능
-  * ping(Packet INternet Groper): 대상 컴을 향해 일정 크기의 패킷을 보내고 이에 대한 응답을 받아 대상 컴퓨터의 동작 여부나 네트워크 상태 파악 가능
-     > ping [IP 또는 도메인]
-  * nsLookup: DNS에 질의하여, 도메인의 정보를 조회, 어떤 주소의 실제 IP주소알 수 o
-  * netstat: 현재 내 컴에서 연결중이거나 연결대기중인 상태의 port 확인 가능
-  * route: 현재 넷상의 모든 연결
-* loopback: 컴퓨터환경에서 자기 자신에 접근하는 경우
-  * 127.0.0.1
-    * OS자체적으로 제공하며, 항상 고정된 자기자신을 가리키는 IP, 예약된 ip주소
-    * os에서 가상 지원, 랜카드 등 디바이스 자체를 통과하지 않고 sw적으로 처리됨
-  * localhost
-    * 호스트네임, 자신의 ip로 직접 접근 시, localhost로 접근하는게 더 빠르고 자원 덜 씀
-* 포트번호
-    * 80번: internet과 통신 시 사용
-    * 23번: MS-SQL
-* 프로토콜: 컴들이 네트워크를 통해 데이터를 주고받기 위한 통신규약
-    * 네트워크에서 데이터를 주고 받기 위해서는 그 네트워크에서 사용되는 프로토콜 따라야
-* TCP(transmission control protocol): 연결형 서비스 지원하는 전송계층 프로토콜, 신뢰성o, unicast
-    * IP와 포트 필요: IP는 호스트까지 연결하지만(계층차이), tcp는 호스트 내 포트까지 연결하며 해당 포트에서 기다리고 응용 프로그램까지 도달
-* TcpListener/ TcpClient: .NET프레임워크가 TCP/IP통신을 위해 제공하는 클래스
-    * 내부적으로 System.Net.Sockets.Socket클래스 기능들 사용
-  * Tcpclient클래스 - 클라이언트
-    * TcpClient.Client(내부소켓).RemoteEndPoint(원격 끝점)
-  * TcpListener클래스 -서버
-    * AcceptTcpClient: 포트를 열고 메서드를 통해 클라이언트 접속을 대기하고 있다가 접속 요청이 오면 이를 받아들여 tcpClient객체를 생성하여 리턴
-    * > blocking 주의: 연결전까지 대기만 가능, 스레드 상태 변화 불가(진행중인 스레드 마치고 상태변화 적용 되므로)
-    * AcceptSocket: AcceptTcpClient()대신 사용 시 tcpclient 객체 대신 low level의 Socket객체 사용 가능
-    * Pending: 보류 중인 연결 존재 시
- 
-* socket: 네트워크 상에서 동작하는 프로그램 간 통신의 종착점(Endpoint)
-    * 응용프로그램에서 tcp/ip를 이용하는 창구역할, 통신을 위한 통로
-    * 프로그램이 네트워크에서 데이터를 통신할 수 있도록 연결해주는 연결부
-  * TCP/IP기반의 Stream방식
-  * UDP/IP기반의 Datagram방식
-* Socket클래스
-    * tcp관련 클래스는 TCP/IP만 지원, 소켓클래스는 IP외에도 다양한 네트워크
-    * Available: 읽을 수 있는 데이터의 양
-    * Receive: 바인딩 된 소켓 정보 받기, 받은 바이트 수 반환
-    * RemoteEndPoint: 원격 끝점 -->EndPoint로, cast연산 통해 IPEndPoint(O)
-
-==> 소켓 연결 대기 중에는 Form다른 동작x --> 스레드 필요
-* 스레드(thread): 하나의 프로그램에서 한번에, 동시에 많은 일 처리 가능
-  * 상태: suspend, abort 등
-   * 교차 스레드(cross Thread): 컴포넌트 생성한 스레드와 호출한 스레드가 다를 때 발생
-    > 해당 스레드를 만든 곳이 아니면 동작x
-  * 해결: delegate: 대리자로서 메서드를 다른 메서드의 인수로 전달
-
-* Delegate(대리자): 대신 수행, 메서드에 대한 참조를 가리키는 형식으로 메서드 간접 호출 가능
-    * 함수의 포인터라고 생각하면 편함
-    * delegate선언, 그곳에 맞는 콜백함수를 선언하여 처리
-    * 프로젝트 내용 중 addText함수: 컨트롤.InvokeRequired발생 시, invoke로 실행
-* Timer 도구
-    * Tick 이벤트: 타이머의 일정 시간 경과 시 마다 --> 부정확, 안 쓸수 있다면 안쓰는게 좋다
----------
+- Lect 6: Socket Programming(low level)
+  - 다양한 방식으로 Send하기
+    - 서버에서 텍스트박스(tbSend)에 문자열 입력 후 엔터 --> 클라이언트의 텍스트박스(tbReceive)에 입력
+    - 텍스트 박스.SelectedText만 보내기
+     - ContextMenuScript로 ==> tbSend에서 contextmenuscript로 연결해야
+  - TcpListener, TcpClient 클래스 사용한 코드 --> 모두 Socket 사용해서 바꾸기
+    - Bind(), Listen(), Accept()
+  - IPAddress ip = new IPAddress(object[]) --> {127,0,0,1}
