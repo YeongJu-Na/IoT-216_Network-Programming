@@ -1,0 +1,120 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ChatSocket
+{
+    public partial class FrmSocket : Form
+    {
+        public FrmSocket()
+        {
+            InitializeComponent();
+        }
+
+        byte[] sAddr = {127,0,0,1};
+        string sPort = "9000";
+
+        Socket sockServer = null;         //Socket을 이용한 서버 프로그래밍 <-- Listener 대신
+        Socket sock = null;             //
+        Thread threadServer = null;     //연결 대기 및 승인
+        Thread threadRead = null;       //데이터 읽기(통신)
+
+        private void mnuStart_Click(object sender, EventArgs e)     //소켓 생성 및 스레드 생성
+        {
+            if (sockServer == null)
+            {
+                sockServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            }
+            else
+            {
+                if (threadServer != null) threadServer.Abort();
+                if (threadRead != null) threadRead.Abort();
+
+                sockServer.Close();
+                sockServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            }
+
+            if (threadServer == null)
+            {
+                threadServer = new Thread(ServerProcess);
+                threadServer.Start();
+            }
+            if (threadRead == null)
+            {
+                threadRead = new Thread(ReadProcess);
+            }
+
+        }
+        void ServerProcess()        //ip주소와 포트 할당(bind), 연결 대기(listen), 연결 승인(accept)
+        {
+            //listener.Start();
+            IPAddress ip = new IPAddress(sAddr);
+            IPEndPoint ep = new IPEndPoint(ip, int.Parse(sPort));
+            sockServer.Bind(ep);
+            sockServer.Listen(50000);
+
+            while (true)
+            {
+                //listener.AcceptTcpClient();   //이전에 클래스를 사용한 내용
+                sock = sockServer.Accept();
+                threadRead.Start();
+            }
+
+        }
+
+        delegate void cbAddText(string str);
+        void AddText(string str)
+        {
+            if (tbReceive.InvokeRequired)
+            {
+                cbAddText cb = new cbAddText(AddText);
+                Invoke(cb, new object[] { str });
+            }
+            else tbReceive.AppendText(str);
+        }
+
+        void ReadProcess()
+        {
+            while (true)
+            {
+                if (sock != null && sock.Available>0)
+                {
+                    byte[] bArr = new byte[sock.Available];
+                    sock.Receive(bArr);
+                    AddText(Encoding.Default.GetString(bArr));
+                }
+            }
+        }
+        void SendText(string str)
+        {
+            if(sock==null || !sock.Connected)   //try ~ catch로 안됨 --> 왜지?
+            {
+                MessageBox.Show("연결 정보가 없습니다.");
+                return;
+            }
+            sock.Send(Encoding.Default.GetBytes(str));
+        }
+        private void mnuSend_Click(object sender, EventArgs e)
+        {
+            SendText(tbSend.SelectedText);
+        }
+
+        private void FrmSocket_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (threadServer != null) threadServer.Abort();
+            if (threadRead != null) threadRead.Abort();
+            if (sockServer != null) sockServer.Close();
+            if (sock != null) sock.Close();
+
+        }
+    }
+}
