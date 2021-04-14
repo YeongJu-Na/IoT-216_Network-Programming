@@ -1,4 +1,6 @@
 # IoT-216 강의: Network-Programming / C# winForm
+
+---수업이론내용(네트워크 구조, 네트워크 클래스, 소켓, 스레드) / Daily 과제 및 시행착오
 -------------------
 ### [수업 이론 내용] 
 --------------------
@@ -27,7 +29,6 @@
 * UDP서버와 클래스: 기본은 TCP와 같으나, 대기상태는 접속 요청을 받는 게 아니라 바로 데이터 받음
   * 비연결형: IP주소와 포트 번호 알면 데이터 전송 가능(접속요청, 즉 연결을 따로 하지 않음을 의미)
   * UdpClient: 서버와 클 모두에서 사용  /  그룹 처리: UdpClient.JoinMulticast() 사용
-
 * loopback: 컴퓨터환경에서 자기 자신에 접근하는 경우
   * 127.0.0.1
     * OS자체적으로 제공하며, 항상 고정된 자기자신을 가리키는 IP, 예약된 ip주소
@@ -81,6 +82,7 @@
 * BinaryWriter/Reader - 이진 파일(임의의 데이터 형 해석<->일반적인 것들은 1바이트 단위형 해석)
   * Write
   * ReadXXX→ ex) ReadString(), ReadInt32(), ReadChar 등
+  
 3. Socket Programming
   * 송신: 소켓 생성 → 연결 요청 및 연결(connect) → 통신(send/ recv) → 소켓 닫기
   * 수신: 소켓 생성→ ip주소,포트 할당(bind) → 연결 대기(listen)-->연결 승인(accept)--> 통신 → 닫기
@@ -115,11 +117,13 @@
   * Join: 스레드가 종료될 때 까지 대기
   * Abort: 스레드 중지,이 함수를 호출한 곳의 현재 스레드를 중지→current로 가리켜서 중지 가능 (Thread.CurrentThread.Abort())
   * resume, suspend → 닷넷 2.0 버전 이후부터 사용하지 않는 메서드이며 제거됨
-
  * 교차 스레드(cross Thread): 컴포넌트 생성한 스레드와 호출한 스레드가 다를 때 발생
     > 해당 스레드를 만든 곳이 아니면 동작x
   * 해결: delegate: 대리자로서 메서드를 다른 메서드의 인수로 전달
-
+* 콜백함수
+    * 일반적으로 우리는 시스템에 콜을 해서 함수를 호출, 이와 반대되는 개념이 콜백함수
+    * 사용자가 콜해서 시스템이 실행하다가 사용자가 콜백하라고 한거 보고 말해주는것
+==> 콜백을 구현할 때 사용하는 것이 대리자
 * Delegate(대리자): 대신 수행, 메서드에 대한 참조를 가리키는 형식으로 메서드 간접 호출 가능
     * 함수의 포인터라고 생각하면 편함
     * delegate선언, 그곳에 맞는 콜백함수를 선언하여 처리
@@ -160,7 +164,6 @@
     - → static 붙이기 ⇒ class앞에 static, 그 안의 모든 함수들도 static이어야 ⇒ 클래스명.함수명() 형태로 사용 가능
   - 서버 측에서도 연결 끊지 않고 메세지 전송하기
     - ServerProcess()함수 마지막에 클라이언트에서처럼 Receive
-
 - Lect 6: Socket Programming(low level)
   - 다양한 방식으로 Send하기
     - 서버에서 텍스트박스(tbSend)에 문자열 입력 후 엔터 --> 클라이언트의 텍스트박스(tbReceive)에 입력
@@ -169,3 +172,16 @@
   - TcpListener, TcpClient 클래스 사용한 코드 --> 모두 Socket 사용해서 바꾸기
     - Bind(), Listen(), Accept()
   - IPAddress ip = new IPAddress(object[]) --> {127,0,0,1}
+- Lect 7: 1대 1 채팅 프로그램
+  - thread.IsBackground=true;  //주 스레드 와 같이 종료
+- 기능
+  - form load: Server상태, 연결 대기
+  - 메뉴바 communication의 NewConnect: 연결할 ip와 port 입력하여 그 주소로 연결 및 통신
+    - --> ip, port입력 폼 생성: 이전에 연결됐던 곳의 값 입력되어있음
+    - --> 해당 값 변경 시 유효한 ip, port인지 검사 후 connect
+  - 메뉴바 communication의 연결대기: Server로서 대기 상태로 전환
+- 시행착오
+  - 어제의 의문사항: 연결없이 send버튼 클릭 시 에러메세지 안뜸 -->런타임시 걸리는 조건이라서
+    - try catch 이전에 if문으로 처리
+  - 매번 텍스트 박스 초기화하는 대신, 텍스트박스 동적 생성, tb.parent = panel
+    - 매 연결마다 초기화하면 이전의 연결내용 볼 수 없음
