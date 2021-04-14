@@ -164,7 +164,7 @@
     - → static 붙이기 ⇒ class앞에 static, 그 안의 모든 함수들도 static이어야 ⇒ 클래스명.함수명() 형태로 사용 가능
   - 서버 측에서도 연결 끊지 않고 메세지 전송하기
     - ServerProcess()함수 마지막에 클라이언트에서처럼 Receive
-- Lect 6: Socket Programming(low level)
+- Lect 6: Socket Programming(low level) 
   - 다양한 방식으로 Send하기
     - 서버에서 텍스트박스(tbSend)에 문자열 입력 후 엔터 --> 클라이언트의 텍스트박스(tbReceive)에 입력
     - 텍스트 박스.SelectedText만 보내기
@@ -172,7 +172,7 @@
   - TcpListener, TcpClient 클래스 사용한 코드 --> 모두 Socket 사용해서 바꾸기
     - Bind(), Listen(), Accept()
   - IPAddress ip = new IPAddress(object[]) --> {127,0,0,1}
-- Lect 7: 1대 1 채팅 프로그램
+- Lect 7: 1대 1 채팅 프로그램       ==> FrmChat.cs , FrmConnectSetting.cs
   - thread.IsBackground=true;  //주 스레드 와 같이 종료
 - 기능
   - form load: Server상태, 연결 대기
