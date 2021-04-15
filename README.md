@@ -43,17 +43,15 @@
   - IPAddress ip = new IPAddress(object[]) --> {127,0,0,1}
 - Lect 7: 1대 1 채팅 프로그램       ==> FrmChat.cs , FrmConnectSetting.cs
   - thread.IsBackground=true;  //주 스레드 와 같이 종료
-- 기능
-  - form load: Server상태, 연결 대기
-  - 메뉴바 communication의 NewConnect: 연결할 ip와 port 입력하여 그 주소로 연결 및 통신
+  - 기능
+    - form load: Server상태, 연결 대기
+    - 메뉴바 communication의 NewConnect: 연결할 ip와 port 입력하여 그 주소로 연결 및 통신
     - --> ip, port입력 폼 생성: 이전에 연결됐던 곳의 값 입력되어있음
     - --> 해당 값 변경 시 유효한 ip, port인지 검사 후 connect
-  - 메뉴바 communication의 연결대기: Server로서 대기 상태로 전환
-- 시행착오
-  - 어제의 의문사항: 연결없이 send버튼 클릭 시 에러메세지 안뜸 -->런타임시 걸리는 조건이라서
-    - try catch 이전에 if문으로 처리
-  - 매번 텍스트 박스 초기화하는 대신, 텍스트박스 동적 생성, tb.parent = panel
-    - 매 연결마다 초기화하면 이전의 연결내용 볼 수 없음
+    - 메뉴바 communication의 연결대기: Server로서 대기 상태로 전환
+  - 시행착오
+    - 어제의 의문사항: 연결없이 send버튼 클릭 시 에러메세지 안뜸 -->런타임시 걸리는 조건이라서
+    - --> try catch 이전에 if문으로 처리
 - Lect 8: 채팅 프로그램 업글
   - 텍스트박스 하나로 합치고 프로그램표시글, 수신된 내용, 송신한 내용으로 나눠서 표시하기
   - 연결 끊기 메뉴 추가
