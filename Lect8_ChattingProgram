@@ -1,0 +1,276 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ChattingProgram
+{
+    public partial class FrmChat : Form
+    {
+        public FrmChat()
+        {
+            InitializeComponent();
+        }
+
+        byte[] bAddr = { 127, 0, 0, 1 };
+        string sPort = "9000";
+
+        string sAddrC = "";    //연결된 remoteEndPoint
+        string sPortC = "";
+
+        Socket sockServer = null;
+        Socket sock = null;
+        Thread threadServer = null;
+        Thread threadRead = null;
+        Thread threadSession = null;
+
+        delegate void cbAddText(string str, int chk);
+        delegate void cbSessionState(int n);
+
+        //텍스트 박스 표시 - 0:둘다표시할 내용 1:send한 내용 2:receive
+        void AddText(string str, int chk)   
+        {
+            if (tbReceived.InvokeRequired)
+            {
+                cbAddText cb = new cbAddText(AddText);
+                Invoke(cb, new object[] { str,chk });
+            }
+            else
+            {
+                if(chk == 0)
+                {
+                    tbReceived.AppendText(str + '\n');
+                    //tbSent.AppendText(str + '\n');
+                }
+                else if (chk == 1)
+                {
+                    tbReceived.AppendText("나>> "+str+'\n');
+                    
+                    //tbSent.AppendText(str + '\n');
+                }
+                else
+                {
+                    tbReceived.AppendText("상대방>> " + str + '\n');
+                    //tbSent.AppendText("\n");
+                }
+                //tbReceived.AppendText(str+'\n');
+            }
+            
+        }
+
+        //현재 소켓의 연결 상태 확인 후 상태 표시줄에 색깔로 표현
+        void SessionState(int n)
+        {
+            if (statusStrip1.InvokeRequired)
+            {
+                cbSessionState cb = new cbSessionState(SessionState);
+                Invoke(cb, new object[] { n });
+            }
+            else
+            {
+                if (n == 1) //소켓 연결 성공
+                {
+                    sbLabel1.BackColor = Color.GreenYellow;
+                }
+                else
+                {
+                    sbLabel1.BackColor = Color.PaleVioletRed;
+                }
+            }
+        }
+        private void FrmChat_Load(object sender, EventArgs e)
+        {
+            //ServerStart();
+        }
+
+        //서버상태 초기작업 - 스레드 생성, 시작, 텍스트박스로 알림
+        void ServerStart()  
+        {
+            this.Text = "Chatting Program - Server";
+            sockServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            threadServer = new Thread(ServerProcess);
+            threadServer.IsBackground = true;    //주 스레드 종료시 함께 종료
+            threadRead = new Thread(ReadProcess);
+            threadRead.IsBackground = true;
+            threadSession = new Thread(SessionProcess);
+            threadSession.IsBackground = true;
+            threadServer.Start();
+            AddText("연결 대기 상태" + '\n', 0);
+        }
+
+        //서버 연결 작업- bind, listen, accept
+        void ServerProcess()    
+        {
+            IPAddress ip = new IPAddress(bAddr);
+            IPEndPoint ep = new IPEndPoint(ip, int.Parse(sPort));
+            sockServer.Bind(ep);
+            sockServer.Listen(50000);
+            //try
+            {
+                while (true)
+                {
+                    sock = sockServer.Accept();
+                    threadSession.Start();
+                    if (sock != null)
+                    {
+                        string[] sArr=sock.RemoteEndPoint.ToString().Split(':');
+                        sAddrC = sArr[0];
+                        sPortC = sArr[1];
+                        AddText(sock.RemoteEndPoint.ToString() + "와 연결되었습니다.",0);
+                    }
+                    if (threadRead.IsAlive)
+                    {
+                        threadRead.Abort();
+                        threadRead = new Thread(ReadProcess);
+                    }
+                    threadRead.Start();
+                }
+            }
+            //catch(Exception e)
+            {
+            //    MessageBox.Show(e.Message);
+            }
+        }
+
+        //소켓 정상 연결/연결 끊어짐 - statusbar 색으로 표시
+        void SessionProcess()
+        {
+            while (true)
+            {
+                if (sock!=null && sock.Connected)
+                {
+                    SessionState(1);
+                    //sbLabel1.BackColor = Color.GreenYellow;
+                }
+                else
+                {
+                    SessionState(0);
+                    //sbLabel1.BackColor = Color.PaleVioletRed;
+                    ConnectInit();
+                    sock = null;
+                }
+                Thread.Sleep(100);
+            }
+        }
+
+        //연결된 소켓에 대해 읽어올 데이터 있을 시, 화면에 표시
+        void ReadProcess()  
+        {
+            while (true)
+            {
+                if(sock!=null && sock.Connected && sock.Available > 0)
+                {
+                    byte[] bArr = new byte[sock.Available];
+                    sock.Receive(bArr);
+                    AddText(Encoding.Default.GetString(bArr),2);
+                }
+            }
+        }
+
+        void SendText(string str)       //텍스트 보내기
+        {
+            if(sock==null || !sock.Connected)
+            {
+                MessageBox.Show("연결 정보가 없습니다.");
+                return;
+            }
+            try
+            {
+                sock.Send(Encoding.Default.GetBytes(str));
+                //Send완료시 
+                AddText(str, 1);
+                tbSend.Text = "";
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+
+        private void btnSend_Click(object sender, EventArgs e)
+        {
+            if (tbSend.Text == "") return;
+            SendText(tbSend.Text);
+        }
+
+        private void FrmChat_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            ConnectInit();
+        }
+
+        private void mnuNewConnect_Click(object sender, EventArgs e)
+        {
+            FrmConnectSetting dlg = new FrmConnectSetting(sAddrC, sPortC);
+
+            if (dlg.ShowDialog()== DialogResult.OK)
+            {
+                try
+                {
+                    sAddrC = dlg.ip;
+                    sPortC = dlg.port;
+                    ConnectInit();
+                    sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    sock.Connect(sAddrC, int.Parse(sPortC));
+                    threadRead = new Thread(ReadProcess);
+                    threadRead.Start();
+                    threadRead.IsBackground = true;
+                    threadSession = new Thread(SessionProcess);
+                    threadSession.Start();
+                    threadSession.IsBackground = true;
+
+                    AddText(sock.RemoteEndPoint.ToString() + "와 연결되었습니다.", 0);
+                    this.Text = "Chatting Program - Client";
+                }
+                catch (Exception e1)
+                {
+                    MessageBox.Show(e1.Message);
+                }
+            }
+        }
+
+        //연결 초기화 - 모든 소켓 닫기, 스레드 중지, 화면에 구분선 표시
+        void ConnectInit() 
+        {
+            if (sockServer != null) sockServer.Close();
+            if (sock != null) sock.Close();
+            if (threadServer != null) threadServer.Abort();
+            if (threadRead != null) threadRead.Abort();
+            if (threadSession != null) threadSession.Abort();
+            tbSend.Text = "";
+            tbReceived.AppendText("------------------------------\n");
+        }
+
+        //서버 상태로 가기 - 현재 연결 초기화, 서버기능 시작
+        private void mnuWait_Click(object sender, EventArgs e)
+        {
+            
+            ConnectInit();
+            ServerStart();
+        }
+
+        //tbSend에서 엔터키 누르면 전송버튼과 같은 기능
+        private void tbSend_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (tbSend.Text == "") return;
+                SendText(tbSend.Text);
+            }
+        }
+
+        // 현재 연결에 대한 연결 끊기
+        private void 연결끊기ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ConnectInit();
+            AddText("연결이 없습니다.",0);
+        }
+    }
+}
