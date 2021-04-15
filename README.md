@@ -1,6 +1,70 @@
 # IoT-216 강의: Network-Programming / C# winForm
+---------
+### [과제 및 시행착오]
+---------
+- Lect 1 - 이론
+- Lect 2 - 소켓 생성 및 활용, 스레드 생성 및 활용
+  - FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
+  - 스레드내에서 폼의 컨트롤 속성(tbServer.Text) 직접 변경 시, 에러 
+    - invoke, delgate(내일 배울 것) 
+    - 위 대신에 글로벌변수에 저장 후 타이머tick마다 tbServer.Text에 
+- Lect 3 - 프로젝트 2개(서버, 클라이언트)생성해서 1패킷 주고 받기 / 설치파일(ini)
+  - listener.AcceptTcpClient()
+    * blocking - 연결 받기까지 다른 작업(창 이동 등) 불가, 스레드 abort, suspend 등을 해도 진행중인 스레드 모두 끝내고 적용되므로 문제
+    * → if(listener.Pending())내에 작성	 // 보류 중인 연결 있을 때에만 accept하도록 해야 함
+  - listener: 로컬포트에 일정한 포트 넘버를 계속 감시하는 기능 수행
+    * start후 계속 살아있는 상태로 stop하지 않는게 좋다 (스레드와 운명 같이하도록)- 경험적
+  * 스레드 무한 루프 끝에 Thread.Sleep(100);  //약간의(10~100정도)딜레이를 주는게 좋다
+    * cpu점유 등과 관련 → 부하가 커서? 다른 처리속도 느려짐
+  * Timer: 타이머 정확x →  사용시 검증 중요, 안쓸수 있다면 안쓰는게 좋다
+  * 연결 accept - TcpClient 대신 socket 사용해보기
+    * listener.AcceptSocket()
+    * socket.Available, Receive(), RemoteEndPoint()
+    * EndPoint: 통신하는 양 끝점
+    * IPEndPoint
+  * 설정 파일 - 사용자 환경 저장(설치작업, customizing) - ini파일 , 레지스트리 ==> ini파일: initialize 의미
+    * 폼 load될 때, ini에서 초기 값 가져와 설정 / 폼closing 시, 최종값으로 ini 갱신
+    * kernel32.dll파일 import 후 사용할 메서드 선언(GetPrivateProfileString / write~)
+    * > +) 폼위치 : Location = new Point(x,y)--> x,y각각 넣을수없음, 폼 사이즈도
+- Lect 4
+  - 컨트롤 클래스 라이브러리에 설정파일(ini)조작하는 함수 담기
+    - 새 프로젝트(컨트롤 클래스 라이브러리)로 작성 후 빌드 → 사용할 프로젝트의 참조로 추가(.dll)
+    - 라이브러리에서 작성한 다른 클래스 mylib를 프로젝트에서 쓸 때, using, new필요 → 번거로움 
+    - → static 붙이기 ⇒ class앞에 static, 그 안의 모든 함수들도 static이어야 ⇒ 클래스명.함수명() 형태로 사용 가능
+  - 서버 측에서도 연결 끊지 않고 메세지 전송하기
+    - ServerProcess()함수 마지막에 클라이언트에서처럼 Receive
+- Lect 6: Socket Programming(low level) 
+  - 다양한 방식으로 Send하기
+    - 서버에서 텍스트박스(tbSend)에 문자열 입력 후 엔터 --> 클라이언트의 텍스트박스(tbReceive)에 입력
+    - 텍스트 박스.SelectedText만 보내기
+     - ContextMenuScript로 ==> tbSend에서 contextmenuscript로 연결해야
+  - TcpListener, TcpClient 클래스 사용한 코드 --> 모두 Socket 사용해서 바꾸기
+    - Bind(), Listen(), Accept()
+  - IPAddress ip = new IPAddress(object[]) --> {127,0,0,1}
+- Lect 7: 1대 1 채팅 프로그램       ==> FrmChat.cs , FrmConnectSetting.cs
+  - thread.IsBackground=true;  //주 스레드 와 같이 종료
+- 기능
+  - form load: Server상태, 연결 대기
+  - 메뉴바 communication의 NewConnect: 연결할 ip와 port 입력하여 그 주소로 연결 및 통신
+    - --> ip, port입력 폼 생성: 이전에 연결됐던 곳의 값 입력되어있음
+    - --> 해당 값 변경 시 유효한 ip, port인지 검사 후 connect
+  - 메뉴바 communication의 연결대기: Server로서 대기 상태로 전환
+- 시행착오
+  - 어제의 의문사항: 연결없이 send버튼 클릭 시 에러메세지 안뜸 -->런타임시 걸리는 조건이라서
+    - try catch 이전에 if문으로 처리
+  - 매번 텍스트 박스 초기화하는 대신, 텍스트박스 동적 생성, tb.parent = panel
+    - 매 연결마다 초기화하면 이전의 연결내용 볼 수 없음
+- Lect 8: 채팅 프로그램 업글
+  - 텍스트박스 하나로 합치고 프로그램표시글, 수신된 내용, 송신한 내용으로 나눠서 표시하기
+  - 연결 끊기 메뉴 추가
+  - 현재의 연결 상태에 따라 statusStrip에 색깔로 표현하기
+    - SessionProcess / threadSession: 현재 연결 체크(sock.Connected) 후 아래 함수 호출 
+    - cbSessionState / SessionState
+    - → 없을 시 크로스스레드 발생 
+    - → 해당 stripstatusLabel에 대해서가 x, statusstrip전체 에 대한 nvokeRequired
+==> 현재 남은 문제; 상대측 연결이 끊기고 나서 내가 Send를 두번 해야만 연결끊어짐을 인식함
 
----> 수업이론내용 / Daily 과제 및 시행착오
+
 -------------------
 ### [수업 이론 내용] 
 --------------------
@@ -93,14 +157,15 @@
   * UDP/IP기반의 Datagram방식
 * Socket클래스
     * tcp관련 클래스는 TCP/IP만 지원, 소켓클래스는 IP외에도 다양한 네트워크
-    * Available: 읽을 수 있는 데이터의 양
+    * Available: 읽을 수 있는 데이터의 양 --> Receive할 때 그만큼의 공간만 확보해서 받을 수 있음
     * Receive: 바인딩 된 소켓 정보 받기, 받은 바이트 수 반환
-    * RemoteEndPoint: 원격 끝점 -->EndPoint로, cast연산 통해 IPEndPoint(O)
+    * RemoteEndPoint: 원격 끝점 -->EndPoint로, cast연산 통해 IPEndPoint(O) / Local도 있음
+    * Send: byte[]로만 가능 
 
 ==> 소켓 연결 대기 중에는 Form다른 동작x --> 스레드 필요
 4. Thread
   * 운영체제의 자원, 프로그램 안에서 독립적으로 실행 가능(멀티태스킹 os)
-    * 함수를 스레드에게 실행해달라고 구현해서 줌
+    * 함수를 스레드에게 실행해달라고 구현해서 줌 --> new Thread(함수명)
 > 프로그램(코드& 데이터) → 프로세스(os로부터 할당받은 메모리에 코드와 데이터를 저장, cpu 할당 받아 실행 가능한 상태) → 스레드(프로세스를 할당 받고 코드를 실행) (프로세스:메모리개념, 스레드는 실행 개념)
 * 실행: 프로그램 실행(Main→ 주스레드, 싱글 스레드) / 코드에 의해 (thread라는 객체를 이용해서 프로그래머가 실행시킴)
 * 스레드 함수의 호출 구조
@@ -128,60 +193,3 @@
     * 함수의 포인터라고 생각하면 편함
     * delegate선언, 그곳에 맞는 콜백함수를 선언하여 처리
     * 프로젝트 내용 중 addText함수: 컨트롤.InvokeRequired발생 시, invoke로 실행
-* Timer 도구
-    * Tick 이벤트: 타이머의 일정 시간 경과 시 마다 --> 부정확, 안 쓸수 있다면 안쓰는게 좋다
----------
-### [과제 및 시행착오]
----------
-- Lect 1 - 이론
-- Lect 2 - 소켓 생성 및 활용, 스레드 생성 및 활용
-  - FormServer 프로젝트의 스레드 내 문제 발생 --> 에러는 FormClient측(socket.connect)에서 떠서 찾는 데 오래걸림
-  - 스레드내에서 폼의 컨트롤 속성(tbServer.Text) 직접 변경 시, 에러 
-    - invoke, delgate(내일 배울 것) 
-    - 위 대신에 글로벌변수에 저장 후 타이머tick마다 tbServer.Text에 
-- Lect 3 - 프로젝트 2개(서버, 클라이언트)생성해서 1패킷 주고 받기 / 설치파일(ini)
-  - listener.AcceptTcpClient()
-    * blocking - 연결 받기까지 다른 작업(창 이동 등) 불가, 스레드 abort, suspend 등을 해도 진행중인 스레드 모두 끝내고 적용되므로 문제
-    * → if(listener.Pending())내에 작성	 // 보류 중인 연결 있을 때에만 accept하도록 해야 함
-  - listener: 로컬포트에 일정한 포트 넘버를 계속 감시하는 기능 수행
-    * start후 계속 살아있는 상태로 stop하지 않는게 좋다 (스레드와 운명 같이하도록)- 경험적
-  * 스레드 무한 루프 끝에 Thread.Sleep(100);  //약간의(10~100정도)딜레이를 주는게 좋다
-    * cpu점유 등과 관련 → 부하가 커서? 다른 처리속도 느려짐
-  * Timer: 타이머 정확x →  사용시 검증 중요, 안쓸수 있다면 안쓰는게 좋다
-  * 연결 accept - TcpClient 대신 socket 사용해보기
-    * listener.AcceptSocket()
-    * socket.Available, Receive(), RemoteEndPoint()
-    * EndPoint: 통신하는 양 끝점
-    * IPEndPoint
-  * 설정 파일 - 사용자 환경 저장(설치작업, customizing) - ini파일 , 레지스트리 ==> ini파일: initialize 의미
-    * 폼 load될 때, ini에서 초기 값 가져와 설정 / 폼closing 시, 최종값으로 ini 갱신
-    * kernel32.dll파일 import 후 사용할 메서드 선언(GetPrivateProfileString / write~)
-    * > +) 폼위치 : Location = new Point(x,y)--> x,y각각 넣을수없음, 폼 사이즈도
-- Lect 4
-  - 컨트롤 클래스 라이브러리에 설정파일(ini)조작하는 함수 담기
-    - 새 프로젝트(컨트롤 클래스 라이브러리)로 작성 후 빌드 → 사용할 프로젝트의 참조로 추가(.dll)
-    - 라이브러리에서 작성한 다른 클래스 mylib를 프로젝트에서 쓸 때, using, new필요 → 번거로움 
-    - → static 붙이기 ⇒ class앞에 static, 그 안의 모든 함수들도 static이어야 ⇒ 클래스명.함수명() 형태로 사용 가능
-  - 서버 측에서도 연결 끊지 않고 메세지 전송하기
-    - ServerProcess()함수 마지막에 클라이언트에서처럼 Receive
-- Lect 6: Socket Programming(low level) 
-  - 다양한 방식으로 Send하기
-    - 서버에서 텍스트박스(tbSend)에 문자열 입력 후 엔터 --> 클라이언트의 텍스트박스(tbReceive)에 입력
-    - 텍스트 박스.SelectedText만 보내기
-     - ContextMenuScript로 ==> tbSend에서 contextmenuscript로 연결해야
-  - TcpListener, TcpClient 클래스 사용한 코드 --> 모두 Socket 사용해서 바꾸기
-    - Bind(), Listen(), Accept()
-  - IPAddress ip = new IPAddress(object[]) --> {127,0,0,1}
-- Lect 7: 1대 1 채팅 프로그램       ==> FrmChat.cs , FrmConnectSetting.cs
-  - thread.IsBackground=true;  //주 스레드 와 같이 종료
-- 기능
-  - form load: Server상태, 연결 대기
-  - 메뉴바 communication의 NewConnect: 연결할 ip와 port 입력하여 그 주소로 연결 및 통신
-    - --> ip, port입력 폼 생성: 이전에 연결됐던 곳의 값 입력되어있음
-    - --> 해당 값 변경 시 유효한 ip, port인지 검사 후 connect
-  - 메뉴바 communication의 연결대기: Server로서 대기 상태로 전환
-- 시행착오
-  - 어제의 의문사항: 연결없이 send버튼 클릭 시 에러메세지 안뜸 -->런타임시 걸리는 조건이라서
-    - try catch 이전에 if문으로 처리
-  - 매번 텍스트 박스 초기화하는 대신, 텍스트박스 동적 생성, tb.parent = panel
-    - 매 연결마다 초기화하면 이전의 연결내용 볼 수 없음
