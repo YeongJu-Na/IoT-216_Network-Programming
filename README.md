@@ -61,7 +61,16 @@
     - → 없을 시 크로스스레드 발생 
     - → 해당 stripstatusLabel에 대해서가 x, statusstrip전체 에 대한 nvokeRequired
 ==> 현재 남은 문제; 상대측 연결이 끊기고 나서 내가 Send를 두번 해야만 연결끊어짐을 인식함
-
+- Lect 9: 어제의 문제 해결 및 1:N통신으로 업그레이드
+  - 연결 관리 문제: socket의 null여부와 sock.Connected만으로는 연결 끊기는 것 인식하기 어려웠음
+  - ==> isAlive 함수 만들기
+    - sock.Poll(1000, SelectMode.Read); // 1000마이크로초(1ms초) 동안 응답대기, 해당 소켓이 readable인지
+    - bool r2 = ss.Available == 0; // 읽을 수 있는 데이터가 없으면 true
+    - try안에 ss.Send(new byte[1], 0, SocketFlags.OutOfBand); //오류는 소켓 연결과 관련된 것-->catch에서 false를 넘겨줌
+  - 여러 클라이언트의 연결 받기
+    - 소켓 리스트 생성해 저장
+    - 현재 상태가 Server인지 Client인지 구분이 필요해짐 --> Mode 라는 int변수로 지정해줌
+    - ReadProcess에서는 Server의 경우 소켓 리스트를 돌면서 기존의 ReadProcess 수행 필요
 
 -------------------
 ### [수업 이론 내용] 
