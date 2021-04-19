@@ -71,6 +71,15 @@
     - 소켓 리스트 생성해 저장
     - 현재 상태가 Server인지 Client인지 구분이 필요해짐 --> Mode 라는 int변수로 지정해줌
     - ReadProcess에서는 Server의 경우 소켓 리스트를 돌면서 기존의 ReadProcess 수행 필요
+- Lect 10: 1:N 통신 - 서버측, 클라이언트 중 하나 선택해서 Send, SessiongPrcoess 수행하기
+  - statusbar의 요소 중 dropdown으로, 연결된 클라이언트들의 주소 목록 만들기
+    - 해당 소켓 accept후 remoteEndPoint의 주소내용을 dropdown item에 추가
+  - 해당 아이템 클릭 시, 그 주소의 클라이언트와의 연결정보 표시 및 Send되도록
+    - foreach(Socket ss in socks) 클릭된 text와 같은 주소 정보인 소켓 찾기
+    - 위의 식 람다식으로 한 줄에 구현 가능( FindIndex함수)
+    - > sock =socks[socks.FindIndex(s=> s.RemoteEndPoint.toString()==e.ClickedItem.Text)];
+⇒ send나 session process 등 기존 함수들은 1대 1 통신으로 소켓이 하나였고, 이를 글로벌 변수인 sock으로 지정해 사용했었으나, 1대 다의 경우 여러 소켓이 존재하게 되었고, 함수들을 바꿀 필요가 있어짐 → 변경 최소화 위해 기존의 sock에는 dropdown 에서 선택된 소켓으로 지정함
+
 
 -------------------
 ### [수업 이론 내용] 
