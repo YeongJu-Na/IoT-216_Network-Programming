@@ -78,7 +78,7 @@
     - foreach(Socket ss in socks) 클릭된 text와 같은 주소 정보인 소켓 찾기
     - 위의 식 람다식으로 한 줄에 구현 가능( FindIndex함수)
     - >sock =socks[socks.FindIndex(s=> s.RemoteEndPoint.toString()==e.ClickedItem.Text)];
-⇒ send나 session process 등 기존 함수들은 1대 1 통신으로 소켓이 하나, 이를 글로벌 변수인 sock으로 지정해 사용했음  1대 다의 경우 여러 소켓이 존재하게 되었고, 함수들을 바꿀 필요가 있어짐   → 변경 최소화 위해 기존의 sock에는 dropdown 에서 선택된 소켓으로 지정함   
+  - send나 session process 등 기존 함수들은 1대 1 통신으로 소켓이 하나, 이를 글로벌 변수인 sock으로 지정해 사용했음  1대 다의 경우 여러 소켓이 존재하게 되었고, 함수들을 바꿀 필요가 있어짐   → 변경 최소화 위해 기존의 sock에는 dropdown 에서 선택된 소켓으로 지정함   
 
 
 -------------------
