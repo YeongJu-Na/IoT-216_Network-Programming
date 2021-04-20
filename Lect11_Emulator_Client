@@ -1,0 +1,161 @@
+using MyLibrary;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace vEquip
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        iniFile ini = new iniFile(".\\vEquip.ini");
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            tbEqCode.Text = ini.GetString("Equipment", "EqCode", "00001");      // 5
+            tbEqModel.Text = ini.GetString("Equipment", "EqModel", "000000");   // 6
+            tbEqLine.Text = ini.GetString("Equipment", "EqLine", "00001");      // 5
+            tbEqBatt.Text = ini.GetString("Equipment", "EqBatt", "00001");      // 5
+            tbEqState.Text = ini.GetString("Equipment", "EqState", "00001");    // 1
+            tbEqCount.Text = ini.GetString("Equipment", "EqCount", "00001");    // 5
+
+            tbEqTemp.Text = ini.GetString("Environment", "EqTemp", "00001");    // 4
+            tbEqHum.Text = ini.GetString("Environment", "EqHum", "000000");     // 4
+            tbEqWind.Text = ini.GetString("Environment", "EqWind", "00001");    // 4
+            tbEqOzon.Text = ini.GetString("Environment", "EqOzon", "00001");    // 4
+            tbEqAir.Text = ini.GetString("Environment", "EqAir", "00001");      // 1
+            tbEqTotal.Text = ini.GetString("Environment", "EqTotal", "00001");  // 4
+
+            //dtStart.Value = new DateTime(long.Parse(ini.GetString("Operation", "StartTime","0")));
+            //dtEnd.Value = new DateTime(long.Parse(ini.GetString("Operation", "EndTime", "0")));
+            tbInterval.Text = ini.GetString("Operation", "Interval", "5");
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (threadRead != null) threadRead.Abort();
+
+            ini.SetString("Equipment", "EqCode",tbEqCode.Text);
+            ini.SetString("Equipment", "EqModel", tbEqModel.Text);
+            ini.SetString("Equipment", "EqLine", tbEqLine.Text);
+            ini.SetString("Equipment", "EqBatt", tbEqBatt.Text);
+            ini.SetString("Equipment", "EqState", tbEqState.Text);
+            ini.SetString("Equipment", "EqCount", tbEqCount.Text);
+
+            ini.SetString("Environment", "EqTemp", tbEqTemp.Text);
+            ini.SetString("Environment", "EqHum", tbEqHum.Text);
+            ini.SetString("Environment", "EqWind", tbEqWind.Text);
+            ini.SetString("Environment", "EqOzon", tbEqOzon.Text);
+            ini.SetString("Environment", "EqAir", tbEqAir.Text);
+            ini.SetString("Environment", "EqTotal", tbEqTotal.Text);
+
+            ini.SetString("Operation", "StartTime", dtStart.Value.Ticks.ToString());
+            ini.SetString("Operation", "EndTime", dtEnd.Value.Ticks.ToString());
+            ini.SetString("Operation", "Interval", tbInterval.Text);
+        }
+
+        Socket sock = null;
+        Thread threadRead = null;
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (sock != null) sock.Close();
+            sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            sock.Connect(sbLabel1.Text, int.Parse(sbLabel2.Text));
+
+            if (threadRead != null) threadRead.Abort();
+            threadRead = new Thread(ReadProcess);
+            threadRead.IsBackground = true;
+            threadRead.Start();
+
+            try
+            {
+                //추가적으로 계속 인터럽트 생성
+                timer1.Interval = int.Parse(tbInterval.Text) * 1000;
+            }
+            catch(Exception e1)
+            {
+                MessageBox.Show(e1.Message);
+            }
+        }
+
+        delegate void cbAddText(string str);
+
+        void AddText(string str)
+        {
+            if (tbMonitor.InvokeRequired)
+            {
+                cbAddText cb = new cbAddText(AddText);
+                Invoke(cb, new object[] { str });
+            }
+            else tbMonitor.AppendText(str);
+        }
+
+        bool isAlive(Socket ss)
+        {
+            if (ss == null) return false;
+            if (!ss.Connected) return false;
+            if (ss.Poll(1000, SelectMode.SelectRead) && ss.Available == 0) return false;
+            try
+            {
+                ss.Send(new byte[1], 0, SocketFlags.OutOfBand);
+                return true;
+            }
+            catch { return false; }
+            }
+
+        void ReadProcess()
+        {
+            Socket lsock = sock;
+            while (true)
+            {
+                lsock = sock;
+                if (isAlive(lsock) && lsock.Available > 0)
+                {
+                    byte[] bArr = new byte[lsock.Available];
+                    lsock.Receive(bArr);
+                    AddText(Encoding.Default.GetString(bArr));
+                }
+                Thread.Sleep(100);
+            }
+
+        }
+
+        private void sbLabel1_DoubleClick(object sender, EventArgs e)
+        {
+
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            timer1.Stop();
+
+            string str = tbEqCode.Text + tbEqModel.Text + tbEqLine.Text + tbEqBatt.Text + tbEqState.Text + tbEqCount.Text
+                + tbEqTemp.Text + tbEqHum.Text + tbEqWind.Text + tbEqOzon.Text + tbEqAir.Text + tbEqTotal.Text;
+
+            byte[] bArr = Encoding.Default.GetBytes(str);
+            if (isAlive(sock))
+            {
+                sock.Send(bArr);
+                tbEqCount.Text = $"{int.Parse(tbEqCount.Text)+1}";
+            }
+
+            // Package 구성: 패킷이 전후에 [02]STX [03]ETX 문자를 덧붙인다
+            // send package: 모두 byte[]로 구성됨
+
+            timer1.Start();
+
+        }
+    }
+}
