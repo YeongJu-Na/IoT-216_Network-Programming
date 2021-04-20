@@ -1,6 +1,6 @@
 # IoT-216 강의: Network-Programming / C# winForm
 ---------
-### [과제 및 시행착오]
+### [실습 및 시행착오]
 ---------
 - Lect 1 - 이론
 - Lect 2 - 소켓 생성 및 활용, 스레드 생성 및 활용
@@ -79,7 +79,15 @@
     - 위의 식 람다식으로 한 줄에 구현 가능( FindIndex함수)
     - >sock =socks[socks.FindIndex(s=> s.RemoteEndPoint.toString()==e.ClickedItem.Text)];
   - send나 session process 등 기존 함수들은 1대 1 통신으로 소켓이 하나, 이를 글로벌 변수인 sock으로 지정해 사용했음  1대 다의 경우 여러 소켓이 존재하게 되었고, 함수들을 바꿀 필요가 있어짐   → 변경 최소화 위해 기존의 sock에는 dropdown 에서 선택된 소켓으로 지정함   
-
+- Lect 11: 에뮬레이터 구성 - 가상 장비 설계 / 클라이언트 모드
+  - 에뮬레이터: 단말기를 흉내내는 프로그램 --> PC통신
+  - 윈폼 도구
+    - textbox - maxLength속성: 고정길이까지만 입력 가능
+    - DateTimePicker - 달력 형태로 날짜를 선택할 수 있음
+  - Timer-Tick 이벤트 - Send Package
+    - 모든 텍스트박스 내용 종합해서 보냄
+    - 타이머 중복 수행 방지 필요!! - tick이벤트 수행 도중 다시 타이머가 돌아오면서 중복수행될 수 있다.
+    - > 시작 시, timer stop시키고 수행한 후, 마지막에 다시 start해야함
 
 -------------------
 ### [수업 이론 내용] 
