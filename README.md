@@ -88,6 +88,21 @@
     - 모든 텍스트박스 내용 종합해서 보냄
     - 타이머 중복 수행 방지 필요!! - tick이벤트 수행 도중 다시 타이머가 돌아오면서 중복수행될 수 있다.
     - > 시작 시, timer stop시키고 수행한 후, 마지막에 다시 start해야함
+- Lect 12: 에뮬레이터 구성 - 가상 장비 설계 / 클라이언트 모드 이어서...
+  - Package 구성
+  - --> 패킷정보는 텍스트박스 내용이며, 텍스트 길이가 각각에게 주어진 자릿수보다 작으면 왼쪽부터 0으로 채운다
+    - str.PadLeft(int length, char c): 전체 길이 length의 왼쪽부터 빈부분에 문자 c넣음
+    - 다른 방법: Format문자열 {숫자, 자리수:변환자 보조값} →  {n,6:D5}   //_00123
+  - --> 패킷의 전후에 [02]STX [03]ETX 문자를 덧붙인다 → 패킷의 시작과 끝 알림
+  - 현재 시간이 폼에서 선택한 시간 범위 사이인 동안 타이머Tick마다 패킷 전송하도록
+  - --> DateTime 객체: 날짜와 시간에 대한 것, 날짜와 시간을 나타내는 틱 수로 초기화 가능
+    - DateTimePicker의 Value과 DateTime 대응 가능
+    - > DateTime dt = new DateTime(dtStart.Value.Ticks);  //dtStart는 DateTimePicker
+  - DateTimePicker 시간 정보 따로 입력 받기
+    - 속성값 변경: Format = Time, ShowUpDown=True로 두어야
+  - 텍스트 박스 입력넣고 실행 -  유효한 값 범위로 난수 생성
+  - --> Random 객체
+    - next(min, max): 지정한 최소, 최대 값 사이의 임의의 수 반환 
 
 -------------------
 ### [수업 이론 내용] 
