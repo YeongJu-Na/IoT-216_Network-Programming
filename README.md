@@ -96,13 +96,32 @@
   - --> 패킷의 전후에 [02]STX [03]ETX 문자를 덧붙인다 → 패킷의 시작과 끝 알림
   - 현재 시간이 폼에서 선택한 시간 범위 사이인 동안 타이머Tick마다 패킷 전송하도록
   - --> DateTime 객체: 날짜와 시간에 대한 것, 날짜와 시간을 나타내는 틱 수로 초기화 가능
-    - DateTimePicker의 Value과 DateTime 대응 가능
+    - DateTimePicker의 Value과 DateTime 대응
     - > DateTime dt = new DateTime(dtStart.Value.Ticks);  //dtStart는 DateTimePicker
+    - > DateTime dt = dtStart.Value.Date + dtStartTime.Value.TimeOfDay; //dtStart는 날짜, dtStartTime은 시간
   - DateTimePicker 시간 정보 따로 입력 받기
     - 속성값 변경: Format = Time, ShowUpDown=True로 두어야
   - 텍스트 박스 입력넣고 실행 -  유효한 값 범위로 난수 생성
   - --> Random 객체
     - next(min, max): 지정한 최소, 최대 값 사이의 임의의 수 반환 
+- Lect 13: 새 프로젝트 EquipmentServer - [메뉴: File -> Start클릭]: 이전에 만든 vEquip와 연결, 해당 데이터 처리
+  - (1)대기(listen), 연결(accept) - ServerProcess
+    - TcpListener 객체 이용, AcceptSocket(), 소켓리스트에 추가
+  - (2)데이터 받기(receive) - readProcess
+    - 소켓 리스트 돌면서 각 소켓의 연결 확인(isAlive()) 후 받기(Receive())
+  - (3)받은 데이터 처리 - ReadProc
+  - (3)-1. Log에 기록: 내 라이브러리(MyLibrary)에 writeLog함수 만들고 참조하기
+    - StreamWriter(string,bool)이용: 파일(string)에 쓰기, true-> 해당 파일 존재 시 덮어씀
+  - (3)-2. 텍스트박스(tbMonitor)에 송신지와 함께 출력
+    - AddText()- delegate, invoke
+  - (3)-3. 데이터베이스(SQL Server) 생성 및 연결, 데이터 처리, 데이터베이스에 삽입(insert)
+    - SqlConnection 생성, DB의 연결문자열 연결
+    - 데이터 처리: 미리 지정한 컬럼과 크기에 맞게 substring으로 각 컬럼값 추출
+    - 처리한 데이터 값들을 넣어 Insert문 만들기
+    - SqlCommand - cmd string? ExecuteNonQuery() 실행
+  - 시행착오
+    - 데이터베이스 테이블 만들 때, 테이블명 바꾸지 않고 업데이트->테이블명 변경 시도 -> sql로 작성하면 됐을수도?있지만 -> 다시 만들고 테이블명 바꾼 뒤 업데이트
+    - DB의 datetime타입 맞추기: 우선 타입 맞는 getdate()로 입력함 -->vEquip에서 시간 정보 같이 보내고 이것을 저장하기
 
 -------------------
 ### [수업 이론 내용] 
