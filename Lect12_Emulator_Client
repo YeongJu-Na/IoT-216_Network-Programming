@@ -28,7 +28,7 @@ namespace vEquip
             tbEqModel.Text = ini.GetString("Equipment", "EqModel", "000000");   // 6 string
             tbEqLine.Text = ini.GetString("Equipment", "EqLine", "00001");      // 5 string
             tbEqBatt.Text = ini.GetString("Equipment", "EqBatt", "00001");      // 5 float 
-            tbEqState.Text = ini.GetString("Equipment", "EqState", "00001");    // 1
+            tbEqState.Text = ini.GetString("Equipment", "EqState", "1");    // 1
             tbEqCount.Text = ini.GetString("Equipment", "EqCount", "00001");    // 5
 
             tbEqTemp.Text = ini.GetString("Environment", "EqTemp", "0001");    // 4
@@ -182,8 +182,8 @@ namespace vEquip
         bool CheckInTime()
         {
             DateTime dt = DateTime.Now;
-            DateTime st= new DateTime(dtStartTime.Value.Ticks);
-            DateTime et = new DateTime(dtEndTime.Value.Ticks);
+            DateTime st= dtStart.Value.Date + dtStartTime.Value.TimeOfDay;
+            DateTime et = dtEnd.Value.Date + dtEndTime.Value.TimeOfDay;
             return dt > st && dt < et;
         }
 
