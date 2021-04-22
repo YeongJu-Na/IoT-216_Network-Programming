@@ -144,7 +144,7 @@ namespace EquipManager
             // sql 작성- 데이터베이스에 튜플 삽입
             //getdate() - 현재 데이터베이스 시스템 타임스탬프를 데이터베이스 표준 시간대 오프셋 없이 datetime 값으로 반환
             string sql = $"insert into fStatus values('{sCode}','{sModel}','{sLine}','{sBatt}','{sState}'" +
-                $",'{sCount}','{sTemp}','{sHum}','{sWind}','{sOzon}','{sAir}','{sTotal}','getdate()')";
+                $",'{sCount}','{sTemp}','{sHum}','{sWind}','{sOzon}','{sAir}','{sTotal}',getdate())";
             RunSql(sql);    // sql실행 
 
         }
