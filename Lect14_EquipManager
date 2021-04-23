@@ -135,7 +135,7 @@ namespace EquipManager
             string sOzon = str.Substring(40, 4);
             string sAir = str.Substring(44, 1);
             string sTotal = str.Substring(45, 4);
-            string fTime =DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string sTime =DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
             //writeLog함수에 시간 추가되므로 fTime붙이지 않아도 됨
             mylib.WriteLog(str);      
@@ -162,14 +162,14 @@ namespace EquipManager
             if (n == 0) //반환 결과 없을 때, insert
             {
                 sql = $"insert into fStatus values('{sCode}','{sModel}','{sLine}','{sBatt}','{sState}'" +
-                $",'{sCount}','{sTemp}','{sHum}','{sWind}','{sOzon}','{sAir}','{sTotal}',getdate())";
+                $",'{sCount}','{sTemp}','{sHum}','{sWind}','{sOzon}','{sAir}','{sTotal}','{sTime}')";
                
             }
             else      //있으면 update
             {
                 sql = $"update fStatus set fModel='{sModel}',fLine='{sLine}',fBatt='{sBatt}'," +
                     $"fState='{sState}',fCount='{sCount}',fTemp='{sTemp}',fHum='{sHum}',fWind='{sWind}'" +
-                    $",fOzon='{sOzon}', fAir='{sAir}',fTotal='{sTotal}',fTime=getdate() " +
+                    $",fOzon='{sOzon}', fAir='{sAir}',fTotal='{sTotal}',fTime='{sTime}' " +
                     $"select top 1 * from fStatus where fCode={sCode} order by fTime desc";
                
             }
