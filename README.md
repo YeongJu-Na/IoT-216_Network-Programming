@@ -122,7 +122,31 @@
   - 시행착오
     - 데이터베이스 테이블 만들 때, 테이블명 바꾸지 않고 업데이트->테이블명 변경 시도 -> sql로 작성하면 됐을수도?있지만 -> 다시 만들고 테이블명 바꾼 뒤 업데이트
     - DB의 datetime타입 맞추기: 우선 타입 맞는 getdate()로 입력함 -->vEquip에서 시간 정보 같이 보내고 이것을 저장하기
-
+- Lect 14. EquipManager 업그레이드
+  - gettime() 대신 string fTime =DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+  - ReadProc()함수
+    - 기존: vEquip에서 보낼 때 마다 데이터베이스에 추가
+    - --> 코드(fCode)필드 값이 같은 데이터에 대한 정보 누적되어 낭비, 보통은  완전히 없애기보다는 로그로 남겨놓음
+    - --> 변경내용: 수신된 데이터의 Code가 데이터베이스에 존재하는지 확인 후, 있으면 갱신, 없으면 삽입하기
+  - (1) select문만들어 실행하여 같은 fCode에 대한 데이터 있는지 확인
+    - Object RunSql함수 만들기: 리턴 값은 (1)에서 select결과 데이터가 있는지 확인하는 용도로만
+    - 쿼리문이면, sqlDataReader로 받고 DataTable객체로 받기(dt.Load(sdr))--> dt반환
+    - 쿼리문이 아니면, sqlCmd.ExecuteNonQuery() 반환(영향을 받는 행의 수 반환, 프로그램내에서 사용하진 않을 듯)
+  - (2)-1. 있다면, update문 만들고 실행
+  - (2)-2. 없으면, insert문 만들고 실행
+  - tabPage1에 datagridview 넣고, 실시간으로 테이블 내용 변화 확인하기
+    - SetGrid()함수 만들기: DataTable객체 변수에 runsql결과 대입(cast)
+    - --> sql문은 테이블의 모든 값 select
+    - DatagridView.DataSource에 DataTable 대입
+    - --> 해당 함수를 타이머 Tick이벤트마다 수행, 함수 실행 전후로 timer stop, start(중복수행방지)
+  - 시행착오
+    - visual studio가 잘 안돌아가는데, 특히 데이터 연결한 이후, 테이블데이터 정의 불러올 수 없습니다?뜨고 더이상 x
+    - --> 노트북 메모리 문제인 듯 함, 잠시 기다렸다가? 다시 시도하면 되기는 함
+    - --> 연결시간 초과가 떴었고, 이번 코드에서도 발생함 --> 해당 이유때문인지는 아직 모르겠음
+  - 나중에 시험해볼 것
+    - sql문 만들 때, 모든 필드에 대해 필드명='필드값' 나열하는 대신 string values=$"'{sCode}','{sModel}',~~"; 정의하고
+    - --> $"insert into fStatus  values({values})";
+    - --> $"update fStatus set  (fCode,fModel~~)={values} where(같음)";
 -------------------
 ### [수업 이론 내용] 
 --------------------
