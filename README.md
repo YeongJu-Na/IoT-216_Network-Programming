@@ -147,6 +147,13 @@
     - sql문 만들 때, 모든 필드에 대해 필드명='필드값' 나열하는 대신 string values=$"'{sCode}','{sModel}',~~"; 정의하고
     - --> $"insert into fStatus  values({values})";
     - --> $"update fStatus set  (fCode,fModel~~)={values} where(같음)";
+- Lect 15. sqlConnection, sqlCommand를 담아 한번에 수행하는 SQLDB클래스 만들기
+  - 메인에 작성한 sqlString으로 연결하고 SQL을 수행했던 부분을 클래스로
+    - SQLDB(string Constr): sqlConnection의 connection string을 인자로 받아와서 초기화 시 연결
+    - GET(string sql)함수: 해당 sql을 select일 때만 수행, 그 결과의 첫 행 첫 열 반환  // 결과 존재 여부 파악 용도
+    - RUN(string sql): 해당 sql문 실행하기
+  - UDP 전송
+    - 기존 내용과의 차이: SocketType.Dgram, ProtocolType.UDP
 -------------------
 ### [수업 이론 내용] 
 --------------------
